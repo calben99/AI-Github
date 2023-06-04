@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>OpenAI API Test</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <h1>Keyword Research</h1>
+    <form id="input-form">
+      <label for="input-text">Topic: </label>
+      <input type="text" id="input-text" name="input-text"><br><br><br>
+      <input type="hidden" id="hidden-field-1" name="hidden-field-1" value="List the 10 most commonly searched keyword phrases. Do not include quotation marks. Topic=">
+      <input type="hidden" id="hidden-field-2" name="hidden-field-2" value=" words">
+      <label for="dropdown-menu">Phrase Length</label>
+      <select id="dropdown-menu" name="dropdown-menu">
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+      </select><br><br><br>
+      <input type="submit" value="Submit"><br><br>
+    </form>
+    <div id="output-div"></div>
+
+    <script>
+      (function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const inputText = urlParams.get('input-text');
+        if (inputText) {
+          document.getElementById('input-text').value = inputText;
+        }
+      })();
+    </script>
+
+<script>
+  const form = document.getElementById('input-form');
+  const input = document.getElementById('input-text');
+  const output = document.getElementById('output-div');
+  const hiddenField1 = document.getElementById('hidden-field-1');
+  const hiddenField2 = document.getElementById('hidden-field-2');
+  const dropdownMenu = document.getElementById('dropdown-menu');
+  const submitBtn = document.querySelector('input[type="submit"]');
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    submitBtn.value = 'Loading...';
+    
+    const apiKey = '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';  // Replace with your own OpenAI API key
+
+    const message = `${hiddenField1.value} ${input.value}. The length of each phrase should be ${dropdownMenu.value}. ${hiddenField2.value}.`;
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [{ role: 'user', content: message }],
+        temperature: 0.7
+      })
+    });
+
+    if (!response.ok) {
+      console.error(`API request failed with status ${response.status}`);
+      submitBtn.value = 'Submit';
+      return;
+    }
+
+    const result = await response.json();
+
+    if (!result.choices || result.choices.length === 0) {
+      console.error('No choices returned from API');
+      submitBtn.value = 'Submit';
+      return;
+    }
+
+const outputLines = result.choices[0].message.content.split('\n');
+const outputText = outputLines.join('<br>');
+
+
+    
+    output.innerHTML = outputText;
+    submitBtn.value = 'Submit';
+  });
+</script>
+
+  </body>
+</html>
